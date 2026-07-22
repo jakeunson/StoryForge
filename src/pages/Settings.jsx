@@ -7,9 +7,9 @@ import { Moon, Sun, Save } from 'lucide-react';
 const Settings = () => {
   const { theme, toggleTheme } = useContext(ThemeContext);
   const [formData, setFormData] = useState({
-    gemini_api_key: '',
-    groq_api_key: '',
-    cohere_api_key: ''
+    geminiApiKey: '',
+    groqApiKey: '',
+    cohereApiKey: ''
   });
   const [loading, setLoading] = useState(true);
 
@@ -18,9 +18,9 @@ const Settings = () => {
       try {
         const data = await apiClient.get('/settings');
         setFormData({
-          gemini_api_key: data.gemini_api_key || '',
-          groq_api_key: data.groq_api_key || '',
-          cohere_api_key: data.cohere_api_key || ''
+          geminiApiKey: data.geminiApiKey || '',
+          groqApiKey: data.groqApiKey || '',
+          cohereApiKey: data.cohereApiKey || ''
         });
       } catch (e) {
         toast.error('설정을 불러오는데 실패했습니다.');
@@ -69,15 +69,15 @@ const Settings = () => {
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
             <label className="form-label">Gemini API Key</label>
-            <input type="password" name="gemini_api_key" value={formData.gemini_api_key} onChange={handleChange} className="input-field" placeholder="AI Studio에서 발급받은 키 입력" />
+            <input type="password" name="geminiApiKey" value={formData.geminiApiKey} onChange={handleChange} className="input-field" placeholder="AI Studio에서 발급받은 키 입력" />
           </div>
           <div>
             <label className="form-label">Groq API Key</label>
-            <input type="password" name="groq_api_key" value={formData.groq_api_key} onChange={handleChange} className="input-field" placeholder="Groq Cloud에서 발급받은 키 입력" />
+            <input type="password" name="groqApiKey" value={formData.groqApiKey} onChange={handleChange} className="input-field" placeholder="Groq Cloud에서 발급받은 키 입력" />
           </div>
           <div>
             <label className="form-label">Cohere API Key</label>
-            <input type="password" name="cohere_api_key" value={formData.cohere_api_key} onChange={handleChange} className="input-field" placeholder="Cohere Dashboard에서 발급받은 키 입력" />
+            <input type="password" name="cohereApiKey" value={formData.cohereApiKey} onChange={handleChange} className="input-field" placeholder="Cohere Dashboard에서 발급받은 키 입력" />
           </div>
 
           <div style={{ marginTop: '1rem', textAlign: 'right' }}>
