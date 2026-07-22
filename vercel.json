@@ -1,11 +1,6 @@
 {
-  "build": {
-    "env": {
-      "PYTHON_VERSION": "3.11"
-    }
-  },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/main.py" },
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
