@@ -17,5 +17,11 @@ if (!admin.apps.length) {
     console.error('Firebase Admin Initialization Error:', error);
   }
 }
+let dbInstance;
+try {
+  dbInstance = admin.firestore();
+} catch (e) {
+  console.error("Failed to get firestore instance:", e);
+}
 
-export const db = admin.firestore();
+export const db = dbInstance;
