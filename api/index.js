@@ -19,8 +19,8 @@ app.use(express.json());
 
 // Master Password Middleware
 export const authMiddleware = (req, res, next) => {
-  const masterPassword = process.env.MASTER_PASSWORD || '0000';
-  const token = req.headers['x-auth-token'];
+  const masterPassword = (process.env.MASTER_PASSWORD || '0000').trim();
+  const token = (req.headers['x-auth-token'] || '').trim();
   
   // Exclude health check and root
   if (req.path === '/' || req.path === '/api/health') return next();
