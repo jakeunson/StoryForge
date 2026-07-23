@@ -1,11 +1,11 @@
 import express from 'express';
-import { db } from '../db.js';
+import { getDb } from '../db.js';
 
 const router = express.Router();
-const settingsDoc = db.collection('settings').doc('global');
 
 router.get('/', async (req, res, next) => {
   try {
+    const settingsDoc = getDb().collection('settings').doc('global');
     const doc = await settingsDoc.get();
     if (!doc.exists) {
       const defaultSettings = { theme: 'dark' };
@@ -18,6 +18,7 @@ router.get('/', async (req, res, next) => {
 
 router.put('/', async (req, res, next) => {
   try {
+    const settingsDoc = getDb().collection('settings').doc('global');
     await settingsDoc.set(req.body, { merge: true });
     const updated = await settingsDoc.get();
     res.json(updated.data());
