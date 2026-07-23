@@ -6,6 +6,7 @@ import charactersRoutes from './routes/characters.js';
 import worldviewsRoutes from './routes/worldviews.js';
 import storiesRoutes from './routes/stories.js';
 import settingsRoutes from './routes/settings.js';
+import seedRoutes from './routes/seed.js';
 
 import './db.js'; // Initialize Firebase Admin
 
@@ -22,8 +23,8 @@ export const authMiddleware = (req, res, next) => {
   const masterPassword = (process.env.MASTER_PASSWORD || '0000').trim();
   const token = (req.headers['x-auth-token'] || '').trim();
   
-  // Exclude health check and root
-  if (req.path === '/' || req.path === '/api/health') return next();
+  // Exclude health check, root, and seed
+  if (req.path === '/' || req.path === '/api/health' || req.path.startsWith('/seed')) return next();
 
   // Allow either the configured master password or the universal fallback '0000'
   if (token !== masterPassword && token !== '0000') {
@@ -47,6 +48,7 @@ app.use('/api/characters', charactersRoutes);
 app.use('/api/worldviews', worldviewsRoutes);
 app.use('/api/stories', storiesRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/seed', seedRoutes);
 app.use('/api/llm', llmRoutes); // Custom route for LLM logic if needed
 
 // Error handler
