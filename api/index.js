@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import { PrismaClient } from '@prisma/client';
 import llmRoutes from './routes/llm.js';
 import booksRoutes from './routes/books.js';
 import charactersRoutes from './routes/characters.js';
@@ -8,7 +7,8 @@ import worldviewsRoutes from './routes/worldviews.js';
 import storiesRoutes from './routes/stories.js';
 import settingsRoutes from './routes/settings.js';
 
-export const prisma = new PrismaClient();
+import './db.js'; // Initialize Firebase Admin
+
 const app = express();
 
 app.use(cors({

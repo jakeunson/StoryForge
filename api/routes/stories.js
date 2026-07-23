@@ -1,55 +1,60 @@
 import express from 'express';
-import { prisma } from '../index.js';
+import { db } from '../db.js';
 import { generateStoryWithLLM } from '../services/llm.js';
 
 const router = express.Router();
+const collection = db.collection('stories');
+const settingsDoc = db.collection('settings').doc('global');
 
 router.get('/', async (req, res, next) => {
   try {
-    const skip = parseInt(req.query.skip) || 0;
-    const limit = parseInt(req.query.limit) || 100;
-    const items = await prisma.story.findMany({ skip, take: limit });
+    const snapshot = await collection.orderBy('createdAt', 'desc').get();
+    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(items);
   } catch (e) { next(e); }
 });
 
 router.post('/', async (req, res, next) => {
   try {
-    const item = await prisma.story.create({ data: req.body });
-    res.json(item);
+    const data = { ...req.body, createdAt: new Date().toISOString() };
+    const docRef = await collection.add(data);
+    res.json({ id: docRef.id, ...data });
   } catch (e) { next(e); }
 });
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const item = await prisma.story.findUnique({ where: { id: parseInt(req.params.id) } });
-    if (!item) return res.status(404).json({ detail: 'Not found' });
-    res.json(item);
+    const doc = await collection.doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ detail: 'Not found' });
+    res.json({ id: doc.id, ...doc.data() });
   } catch (e) { next(e); }
 });
 
 router.put('/:id', async (req, res, next) => {
   try {
-    const item = await prisma.story.update({ where: { id: parseInt(req.params.id) }, data: req.body });
-    res.json(item);
+    await collection.doc(req.params.id).update(req.body);
+    const updated = await collection.doc(req.params.id).get();
+    res.json({ id: updated.id, ...updated.data() });
   } catch (e) { next(e); }
 });
 
 router.delete('/:id', async (req, res, next) => {
   try {
-    const item = await prisma.story.delete({ where: { id: parseInt(req.params.id) } });
-    res.json(item);
+    await collection.doc(req.params.id).delete();
+    res.json({ id: req.params.id, deleted: true });
   } catch (e) { next(e); }
 });
 
 router.post('/:id/generate', async (req, res, next) => {
   try {
-    const storyId = parseInt(req.params.id);
-    const story = await prisma.story.findUnique({ where: { id: storyId } });
-    if (!story) return res.status(404).json({ detail: 'Story not found' });
+    const storyId = req.params.id;
+    const doc = await collection.doc(storyId).get();
+    if (!doc.exists) return res.status(404).json({ detail: 'Story not found' });
+    const story = doc.data();
     
-    const settings = await prisma.setting.findFirst();
-    if (!settings) return res.status(400).json({ detail: 'Settings not configured' });
+    const sDoc = await settingsDoc.get();
+    if (!sDoc.exists) return res.status(400).json({ detail: 'Settings not configured' });
+    const settings = sDoc.data();
     
     // Call LLM
     const provider = req.body.llmProvider || story.llmProvider || 'gemini';
@@ -57,12 +62,10 @@ router.post('/:id/generate', async (req, res, next) => {
     
     const content = await generateStoryWithLLM(provider, prompt, settings);
     
-    const updated = await prisma.story.update({
-      where: { id: storyId },
-      data: { content: content, llmProvider: provider }
-    });
+    await collection.doc(storyId).update({ content: content, llmProvider: provider });
+    const updated = await collection.doc(storyId).get();
     
-    res.json(updated);
+    res.json({ id: updated.id, ...updated.data() });
   } catch (e) { next(e); }
 });
 

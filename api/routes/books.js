@@ -1,43 +1,45 @@
 import express from 'express';
-import { prisma } from '../index.js';
+import { db } from '../db.js';
 
 const router = express.Router();
+const collection = db.collection('books');
 
 router.get('/', async (req, res, next) => {
   try {
-    const skip = parseInt(req.query.skip) || 0;
-    const limit = parseInt(req.query.limit) || 100;
-    const items = await prisma.book.findMany({ skip, take: limit });
+    const snapshot = await collection.orderBy('createdAt', 'desc').get();
+    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(items);
   } catch (e) { next(e); }
 });
 
 router.post('/', async (req, res, next) => {
   try {
-    const item = await prisma.book.create({ data: req.body });
-    res.json(item);
+    const data = { ...req.body, createdAt: new Date().toISOString() };
+    const docRef = await collection.add(data);
+    res.json({ id: docRef.id, ...data });
   } catch (e) { next(e); }
 });
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const item = await prisma.book.findUnique({ where: { id: parseInt(req.params.id) } });
-    if (!item) return res.status(404).json({ detail: 'Not found' });
-    res.json(item);
+    const doc = await collection.doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ detail: 'Not found' });
+    res.json({ id: doc.id, ...doc.data() });
   } catch (e) { next(e); }
 });
 
 router.put('/:id', async (req, res, next) => {
   try {
-    const item = await prisma.book.update({ where: { id: parseInt(req.params.id) }, data: req.body });
-    res.json(item);
+    await collection.doc(req.params.id).update(req.body);
+    const updated = await collection.doc(req.params.id).get();
+    res.json({ id: updated.id, ...updated.data() });
   } catch (e) { next(e); }
 });
 
 router.delete('/:id', async (req, res, next) => {
   try {
-    const item = await prisma.book.delete({ where: { id: parseInt(req.params.id) } });
-    res.json(item);
+    await collection.doc(req.params.id).delete();
+    res.json({ id: req.params.id, deleted: true });
   } catch (e) { next(e); }
 });
 
